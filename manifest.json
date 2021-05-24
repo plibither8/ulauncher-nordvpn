@@ -3,7 +3,7 @@
   "name": "NordVPN",
   "description": "Toggle and connect to NordVPN quickly",
   "developer_name": "plibither8",
-  "icon": "images/icon.png",
+  "icon": "images/icon.svg",
   "preferences": [
     {
       "id": "nord_kw",
