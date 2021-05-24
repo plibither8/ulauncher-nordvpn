@@ -1,6 +1,6 @@
 # ulauncher-nordvpn
 
-> Connect and disconnect to NordVPN from Ulauncher.
+> 🔑 Connect and disconnect to NordVPN from Ulauncher.
 
 Connect to any available country, or disconnect from, using Ulauncher.
 
