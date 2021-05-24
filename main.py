@@ -1,6 +1,7 @@
 import os
 import os.path
 import json
+import pathlib
 from fuzzysearch import find_near_matches
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
@@ -19,7 +20,7 @@ from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAct
 
 class Nord:
     nordvpn_bin_paths = ["/usr/bin/nordvpn", "/bin/nordvpn"]
-    countries = json.load(open("countries.json", "r"))
+    countries = []
     previously_connected = []
 
     def get_installed_path(self):
@@ -50,6 +51,8 @@ class Nord:
         os.system(f"{self.installed_path} disconnect")
 
     def __init__(self):
+        current_path = pathlib.Path(__file__).parent.absolute()
+        self.countries = json.load(open(f"{current_path}/countries.json", "r"))
         self.installed_path = self.get_installed_path()
 
 
