@@ -18,6 +18,11 @@ from ulauncher.api.shared.action.SetUserQueryAction import SetUserQueryAction
 from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAction
 
 
+def get_path(filename):
+    current_dir = pathlib.Path(__file__).parent.absolute()
+    return f"{current_dir}/{filename}"
+
+
 class Nord:
     nordvpn_bin_paths = ["/usr/bin/nordvpn", "/bin/nordvpn"]
     countries = []
@@ -51,8 +56,7 @@ class Nord:
         os.system(f"{self.installed_path} disconnect")
 
     def __init__(self):
-        current_path = pathlib.Path(__file__).parent.absolute()
-        self.countries = json.load(open(f"{current_path}/countries.json", "r"))
+        self.countries = json.load(open(get_path("countries.json"), "r"))
         self.installed_path = self.get_installed_path()
 
 
@@ -89,7 +93,7 @@ class NordExtension(Extension):
         for country in self.get_countries_by_fuzzy(query):
             items.append(
                 ExtensionResultItem(
-                    icon=f'images/flags/{country["code"]}.svg',
+                    icon=get_path(f'images/flags/{country["code"]}.svg'),
                     name=country["label"],
                     on_enter=ExtensionCustomAction(
                         {
@@ -109,7 +113,7 @@ class KeywordQueryEventListener(EventListener):
         if not extension.nord.is_installed():
             items.append(
                 ExtensionResultItem(
-                    icon="images/icon.svg",
+                    icon=get_path("images/icon.svg"),
                     name="NordVPN not installed :/",
                     description="Looks like the NordVPN CLI is not installed on your system!",
                     highlightable=False,
@@ -127,7 +131,7 @@ class KeywordQueryEventListener(EventListener):
         items.extend(
             [
                 ExtensionResultItem(
-                    icon="images/icon.svg",
+                    icon=get_path("images/icon.svg"),
                     name="Connect",
                     description="Connect to NordVPN: choose from a list of countries",
                     highlightable=False,
@@ -136,7 +140,7 @@ class KeywordQueryEventListener(EventListener):
                     ),
                 ),
                 ExtensionResultItem(
-                    icon="images/icon.svg",
+                    icon=get_path("images/icon.svg"),
                     name="Disconnect",
                     description="Disconnect from NordVPN",
                     on_enter=ExtensionCustomAction({"action": "DISCONNECT"}),
