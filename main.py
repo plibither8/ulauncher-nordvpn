@@ -2,13 +2,6 @@ import os
 import os.path
 import json
 import pathlib
-
-fuzzy_not_installed = False
-try:
-    from fuzzysearch import find_near_matches
-except ModuleNotFoundError:
-    fuzzy_not_installed = True
-
 from gi.repository import Notify
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
@@ -93,26 +86,27 @@ class NordExtension(Extension):
         self.subscribe(PreferencesUpdateEvent, PreferencesUpdateEventListener())
         self.nord = Nord()
 
-    def get_countries_by_fuzzy(self, query):
+    def get_country_ext_result_items(self, query):
+        query = query.lower() if query else ""
+        items = []
         data = Nord().previously_connected[:]
         for country in Nord().countries:
             if country not in data:
                 data.append(country)
-        if not query:
-            return data[0:10]
-
-        result = []
-        for country in data:
-            name = country["label"]
-            a = find_near_matches(query, name, max_l_dist=1)
-            if len(a) and a[0].matched:
-                result.append((country, a[0].dist))
-
-        return list(map(lambda r: r[0], sorted(result, key=lambda r: r[1])))[0:10]
-
-    def get_country_ext_result_items(self, query):
-        items = []
-        for country in self.get_countries_by_fuzzy(query):
+        data = list(
+            filter(
+                (
+                    lambda c: any(
+                        map(
+                            lambda d: d.lower().startswith(query),
+                            c.values(),
+                        )
+                    )
+                ),
+                data,
+            )
+        )
+        for country in data[0:10]:
             items.append(
                 ExtensionResultItem(
                     icon=Utils.get_path(f'images/flags/{country["code"]}.svg'),
@@ -131,18 +125,6 @@ class NordExtension(Extension):
 class KeywordQueryEventListener(EventListener):
     def on_event(self, event, extension):
         items = []
-
-        if fuzzy_not_installed:
-            items.append(
-                ExtensionResultItem(
-                    icon=Utils.get_path("images/icon.svg"),
-                    name="fuzzysearch not install",
-                    description='Install the python module "fuzzysearch" using `pip3 install fuzzysearch`',
-                    highlightable=False,
-                    on_enter=HideWindowAction(),
-                )
-            )
-            return RenderResultListAction(items)
 
         if not extension.nord.is_installed():
             items.append(
