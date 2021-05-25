@@ -10,6 +10,7 @@ Connect to any available country, or disconnect from, using Ulauncher.
 
 - [Ulauncher 5](https://ulauncher.io/)
 - Python >= 3
+- `fuzzysearch` module: `pip3 install fuzzysearch`
 
 ### Steps
 

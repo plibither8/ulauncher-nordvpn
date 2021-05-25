@@ -2,7 +2,14 @@ import os
 import os.path
 import json
 import pathlib
-from fuzzysearch import find_near_matches
+
+fuzzy_not_installed = False
+try:
+    from fuzzysearch import find_near_matches
+except ModuleNotFoundError:
+    fuzzy_not_installed = True
+
+from gi.repository import Notify
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
 from ulauncher.api.shared.event import (
@@ -18,9 +25,22 @@ from ulauncher.api.shared.action.SetUserQueryAction import SetUserQueryAction
 from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAction
 
 
-def get_path(filename):
-    current_dir = pathlib.Path(__file__).parent.absolute()
-    return f"{current_dir}/{filename}"
+class Utils:
+    @staticmethod
+    def get_path(filename):
+        current_dir = pathlib.Path(__file__).parent.absolute()
+        return f"{current_dir}/{filename}"
+
+    @staticmethod
+    def notify(title, message):
+        Notify.init("NordVPNExt")
+        notification = Notify.Notification.new(
+            title,
+            message,
+            Utils.get_path("images/icon.svg"),
+        )
+        notification.set_timeout(1000)
+        notification.show()
 
 
 class Nord:
@@ -37,26 +57,28 @@ class Nord:
     def is_installed(self):
         return bool(self.installed_path)
 
-    def connect(self, country_value):
+    def connect(self, country):
         if not self.is_installed():
             return
-        if country_value not in list(
-            map(lambda c: c["value"], self.previously_connected)
-        ):
-            country_data = next(
-                (c for c in self.countries if c["value"] == country_value), None
-            )
-            if country_data:
-                self.previously_connected.insert(0, country_data)
-        os.system(f"{self.installed_path} connect {country_value}")
+        if country not in self.previously_connected:
+            self.previously_connected.insert(0, country)
+        Utils.notify(
+            f"Connecting to {country['label']}...",
+            "Connecting you to NordVPN.",
+        )
+        os.system(f"{self.installed_path} connect {country['value']}")
 
     def disconnect(self):
         if not self.is_installed():
             return
+        Utils.notify(
+            "Disconnecting...",
+            "Disconnecting you from NordVPN.",
+        )
         os.system(f"{self.installed_path} disconnect")
 
     def __init__(self):
-        self.countries = json.load(open(get_path("countries.json"), "r"))
+        self.countries = json.load(open(Utils.get_path("countries.json"), "r"))
         self.installed_path = self.get_installed_path()
 
 
@@ -93,12 +115,12 @@ class NordExtension(Extension):
         for country in self.get_countries_by_fuzzy(query):
             items.append(
                 ExtensionResultItem(
-                    icon=get_path(f'images/flags/{country["code"]}.svg'),
+                    icon=Utils.get_path(f'images/flags/{country["code"]}.svg'),
                     name=country["label"],
                     on_enter=ExtensionCustomAction(
                         {
                             "action": "CONNECT_TO_COUNTRY",
-                            "country": country["value"],
+                            "country": country,
                         }
                     ),
                 )
@@ -110,10 +132,22 @@ class KeywordQueryEventListener(EventListener):
     def on_event(self, event, extension):
         items = []
 
+        if fuzzy_not_installed:
+            items.append(
+                ExtensionResultItem(
+                    icon=Utils.get_path("images/icon.svg"),
+                    name="fuzzysearch not install",
+                    description='Install the python module "fuzzysearch" using `pip3 install fuzzysearch`',
+                    highlightable=False,
+                    on_enter=HideWindowAction(),
+                )
+            )
+            return RenderResultListAction(items)
+
         if not extension.nord.is_installed():
             items.append(
                 ExtensionResultItem(
-                    icon=get_path("images/icon.svg"),
+                    icon=Utils.get_path("images/icon.svg"),
                     name="NordVPN not installed :/",
                     description="Looks like the NordVPN CLI is not installed on your system!",
                     highlightable=False,
@@ -131,7 +165,7 @@ class KeywordQueryEventListener(EventListener):
         items.extend(
             [
                 ExtensionResultItem(
-                    icon=get_path("images/icon.svg"),
+                    icon=Utils.get_path("images/icon.svg"),
                     name="Connect",
                     description="Connect to NordVPN: choose from a list of countries",
                     highlightable=False,
@@ -140,7 +174,7 @@ class KeywordQueryEventListener(EventListener):
                     ),
                 ),
                 ExtensionResultItem(
-                    icon=get_path("images/icon.svg"),
+                    icon=Utils.get_path("images/icon.svg"),
                     name="Disconnect",
                     description="Disconnect from NordVPN",
                     on_enter=ExtensionCustomAction({"action": "DISCONNECT"}),
