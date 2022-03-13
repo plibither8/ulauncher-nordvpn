@@ -165,7 +165,7 @@ class KeywordQueryEventListener(EventListener):
                     icon=Utils.get_path("images/icon.svg"),
                     name="Connect",
                     description="Connect to NordVPN: choose from a list of countries",
-                    highlightable=FalseP,
+                    highlightable=False,
                     on_enter=SetUserQueryAction(
                         f'{extension.keyword or "nord"} connect '
                     ),
