@@ -20,6 +20,8 @@ from ulauncher.api.shared.action.HideWindowAction import HideWindowAction
 from ulauncher.api.shared.action.SetUserQueryAction import SetUserQueryAction
 from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAction
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 class Utils:
     @staticmethod
@@ -72,6 +74,16 @@ class Nord:
             "Disconnecting you from NordVPN.",
         )
         os.system(f"{self.installed_path} disconnect")
+
+    def status(self):
+        if not self.is_installed():
+            return
+        response = subprocess.Popen([self.installed_path, 'status'], stdout.PIPE).communicate()[0].decode('utf8').split('\n')
+        logger.info(response.join("\n"))
+        Utils.notify( 
+            response[0],
+            response[1:].join("\n")
+        )
 
     def __init__(self):
         self.countries = json.load(open(Utils.get_path("countries.json"), "r"))
@@ -153,7 +165,7 @@ class KeywordQueryEventListener(EventListener):
                     icon=Utils.get_path("images/icon.svg"),
                     name="Connect",
                     description="Connect to NordVPN: choose from a list of countries",
-                    highlightable=False,
+                    highlightable=FalseP,
                     on_enter=SetUserQueryAction(
                         f'{extension.keyword or "nord"} connect '
                     ),
@@ -164,6 +176,7 @@ class KeywordQueryEventListener(EventListener):
                     description="Disconnect from NordVPN",
                     on_enter=ExtensionCustomAction({"action": "DISCONNECT"}),
                 ),
+                
             ]
         )
         return RenderResultListAction(items)
@@ -179,6 +192,10 @@ class ItemEnterEventListener(EventListener):
 
         if action == "DISCONNECT":
             return extension.nord.disconnect()
+
+        if action == "STATUS":
+            logging.info("Selected status")
+            return extension.nord.status()
 
         if action == "CONNECT_TO_COUNTRY":
             return extension.nord.connect(data["country"])
