@@ -2,6 +2,8 @@ import os
 import os.path
 import json
 import pathlib
+import subprocess
+from sys import stdout
 from gi.repository import Notify
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
@@ -17,7 +19,6 @@ from ulauncher.api.shared.action.HideWindowAction import HideWindowAction
 from ulauncher.api.shared.action.SetUserQueryAction import SetUserQueryAction
 from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAction
 
-
 class Utils:
     @staticmethod
     def get_path(filename):
@@ -32,7 +33,7 @@ class Utils:
             message,
             Utils.get_path("images/icon.svg"),
         )
-        notification.set_timeout(1000)
+        notification.set_timeout(2500)
         notification.show()
 
 
@@ -69,6 +70,16 @@ class Nord:
             "Disconnecting you from NordVPN.",
         )
         os.system(f"{self.installed_path} disconnect")
+
+    def status(self):
+        if not self.is_installed():
+            return
+        response = subprocess.Popen([self.installed_path, 'status'], stdout=subprocess.PIPE).communicate()[0].decode('utf8').split('\n')
+            
+        Utils.notify( 
+            response[0],
+            "\n".join(response[1:])
+        )
 
     def __init__(self):
         self.countries = json.load(open(Utils.get_path("countries.json"), "r"))
@@ -161,6 +172,13 @@ class KeywordQueryEventListener(EventListener):
                     description="Disconnect from NordVPN",
                     on_enter=ExtensionCustomAction({"action": "DISCONNECT"}),
                 ),
+                ExtensionResultItem(
+                    icon=Utils.get_path("images/icon.svg"),
+                    name="Status",
+                    description="NordVPN Status",
+                    on_enter=ExtensionCustomAction({"action": "STATUS"}),
+                ),
+                
             ]
         )
         return RenderResultListAction(items)
@@ -176,6 +194,9 @@ class ItemEnterEventListener(EventListener):
 
         if action == "DISCONNECT":
             return extension.nord.disconnect()
+
+        if action == "STATUS":
+            return extension.nord.status()
 
         if action == "CONNECT_TO_COUNTRY":
             return extension.nord.connect(data["country"])
