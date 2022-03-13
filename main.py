@@ -196,7 +196,6 @@ class ItemEnterEventListener(EventListener):
             return extension.nord.disconnect()
 
         if action == "STATUS":
-            logging.info("Selected status")
             return extension.nord.status()
 
         if action == "CONNECT_TO_COUNTRY":
