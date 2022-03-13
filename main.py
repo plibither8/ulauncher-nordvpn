@@ -78,7 +78,7 @@ class Nord:
     def status(self):
         if not self.is_installed():
             return
-        response = subprocess.Popen([self.installed_path, 'status'], stdout.PIPE).communicate()[0].decode('utf8').split('\n')
+        response = subprocess.Popen([self.installed_path, 'status'], stdout=subprocess.PIPE).communicate()[0].decode('utf8').split('\n')
         logger.info(response.join("\n"))
         Utils.notify( 
             response[0],
