@@ -1,7 +1,10 @@
 import os
 import os.path
+import subprocess
+import logging
 import json
 import pathlib
+from sys import stdout
 from gi.repository import Notify
 from ulauncher.api.client.Extension import Extension
 from ulauncher.api.client.EventListener import EventListener
