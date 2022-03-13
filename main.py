@@ -176,6 +176,12 @@ class KeywordQueryEventListener(EventListener):
                     description="Disconnect from NordVPN",
                     on_enter=ExtensionCustomAction({"action": "DISCONNECT"}),
                 ),
+                ExtensionResultItem(
+                    icon=Utils.get_path("images/icon.svg"),
+                    name="Status",
+                    description="NordVPN Status",
+                    on_enter=ExtensionCustomAction({"action": "STATUS"}),
+                ),
                 
             ]
         )
