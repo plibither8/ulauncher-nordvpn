@@ -1,9 +1,8 @@
 import os
 import os.path
-import subprocess
-import logging
 import json
 import pathlib
+import subprocess
 from sys import stdout
 from gi.repository import Notify
 from ulauncher.api.client.Extension import Extension
@@ -20,9 +19,6 @@ from ulauncher.api.shared.action.HideWindowAction import HideWindowAction
 from ulauncher.api.shared.action.SetUserQueryAction import SetUserQueryAction
 from ulauncher.api.shared.action.ExtensionCustomAction import ExtensionCustomAction
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-
 class Utils:
     @staticmethod
     def get_path(filename):
@@ -37,7 +33,7 @@ class Utils:
             message,
             Utils.get_path("images/icon.svg"),
         )
-        notification.set_timeout(1000)
+        notification.set_timeout(2500)
         notification.show()
 
 
@@ -79,7 +75,7 @@ class Nord:
         if not self.is_installed():
             return
         response = subprocess.Popen([self.installed_path, 'status'], stdout=subprocess.PIPE).communicate()[0].decode('utf8').split('\n')
-        logger.info("\n".join(response[1:]))
+            
         Utils.notify( 
             response[0],
             "\n".join(response[1:])
